@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Spending Tracker</title>
+<style>
+/* General Styles */
+body {
+font-family: Arial, sans-serif;
+background-color: #f0f8ff;
+color: #333;
+margin: 0;
+padding: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+header {
+background-color: #007acc;
+color: white;
+width: 100%;
+text-align: center;
+padding: 1rem;
+}
+h1 {
+margin: 0.5rem 0;
+}
+.container {
+max-width: 500px;
+margin: 2rem;
+padding: 1.5rem;
+border-radius: 10px;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+background-color: white;
+display: block; /* Ensures it is visible */
+}
+label {
+font-weight: bold;
+}
+input[type="number"] {
+width: 100%;
+padding: 0.5rem;
+margin: 0.5rem 0;
+border: 1px solid #ccc;
+border-radius: 5px;
+}
+button {
+background-color: #007acc;
+color: white;
+border: none;
+padding: 0.5rem 1rem;
+margin-top: 1rem;
+cursor: pointer;
+border-radius: 5px;
+width: 100%;
+}
+button:hover {
+background-color: #005f99;
+}
+.output {
+margin-top: 1rem;
+padding: 1rem;
+border: 1px solid #007acc;
+border-radius: 5px;
+background-color: #f0f8ff;
+}
+.highlight {
+font-weight: bold;
+color: #007acc;
+}
+.hidden {
+display: none;
+}
+</style>
+</head>
+<body>
+<header>
+<h1>Daily Spending Tracker</h1>
+</header>
+<div class="container" id="main-container">
+<label for="daily-allowance">Enter your daily allowance:</label>
+<input type="number" id="daily-allowance" placeholder="Enter amount in ₱" min="1">
+<button onclick="calculateBudget()">Calculate Budget</button>
+<div class="output" id="budget-output" style="display: none;"></div>
+<h2>How You Spent Today:</h2>
+<label for="needs">Needs:</label>
+<input type="number" id="needs" placeholder="Enter amount for Needs" min="0">
+<label for="wants">Wants:</label>
+<input type="number" id="wants" placeholder="Enter amount for Wants" min="0">
+<label for="savings">Savings:</label>
+<input type="number" id="savings" placeholder="Enter amount for Savings" min="0">
+<button onclick="trackSpending()">Save Spending</button>
+<div class="output" id="spending-output" style="display: none;"></div>
+<h2>Saved Data:</h2>
+<div class="output" id="saved-data" style="display: none;"></div>
+<button onclick="exitProgram()" style="background-color: red;">Exit</button>
+</div>
+<div id="welcome-back" class="hidden">
+<h2>Welcome Back!</h2>
+<p>Your progress has been saved. Would you like to continue?</p>
+<button onclick="resumeProgram()">Resume</button>
+</div>
+<script>
+function calculateBudget() {
+const allowance = parseFloat(document.getElementById("daily-allowance").value);
+if (!allowance || allowance <= 0) {
+alert("Please enter a valid allowance amount.");
+return;
+}
+const needs = (allowance * 0.5).toFixed(2);
+const wants = (allowance * 0.3).toFixed(2);
+const savings = (allowance * 0.2).toFixed(2);
+document.getElementById("budget-output").style.display = "block";
+document.getElementById("budget-output").innerHTML = `
+<p>Based on your allowance of <span class="highlight">₱${allowance}</span>, here's your
+suggested budget:</p>
+<ul>
+<li>Needs: <span class="highlight">₱${needs}</span></li>
+<li>Wants: <span class="highlight">₱${wants}</span></li>
+<li>Savings: <span class="highlight">₱${savings}</span></li>
+</ul>
+`;
+// Save allowance in local storage
+localStorage.setItem("dailyAllowance", allowance);
+}
+function trackSpending() {
+const needs = parseFloat(document.getElementById("needs").value) || 0;
+const wants = parseFloat(document.getElementById("wants").value) || 0;
+const savings = parseFloat(document.getElementById("savings").value) || 0;
+const totalSpent = needs + wants + savings;
+if (totalSpent <= 0) {
+alert("Please enter valid spending amounts.");
+return;
+}
+document.getElementById("spending-output").style.display = "block";
+document.getElementById("spending-output").innerHTML = `
+<p>Today's spending summary:</p>
+<ul>
+<li>Needs: <span class="highlight">₱${needs.toFixed(2)}</span></li>
+<li>Wants: <span class="highlight">₱${wants.toFixed(2)}</span></li>
+<li>Savings: <span class="highlight">₱${savings.toFixed(2)}</span></li>
+</ul>
+<p>Total Spent: <span class="highlight">₱${totalSpent.toFixed(2)}</span></p>
+`;
+saveData(needs, wants, savings);
+}
+function saveData(needs, wants, savings) {
+let savedData = JSON.parse(localStorage.getItem("spendingData")) || [];
+const newEntry = { date: new Date().toLocaleDateString(), needs, wants, savings };
+savedData.push(newEntry);
+localStorage.setItem("spendingData", JSON.stringify(savedData));
+displaySavedData();
+}
+function displaySavedData() {
+let savedData = JSON.parse(localStorage.getItem("spendingData")) || [];
+if (savedData.length === 0) {
+document.getElementById("saved-data").style.display = "none";
+return;
+}
+let dataHTML = "<p>Previous Records:</p><ul>";
+savedData.forEach(entry => {
+dataHTML += `<li>${entry.date} - Needs: ₱${entry.needs.toFixed(2)}, Wants:
+₱${entry.wants.toFixed(2)}, Savings: ₱${entry.savings.toFixed(2)}</li>`;
+});
+dataHTML += "</ul>";
+document.getElementById("saved-data").style.display = "block"
